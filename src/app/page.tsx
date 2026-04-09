@@ -12,8 +12,9 @@ import ExpenseFiltersComponent from '@/components/ExpenseFilters';
 import { MonthlyChart, CategoryChart } from '@/components/Charts';
 import Modal from '@/components/Modal';
 import ToastContainer, { ToastMessage } from '@/components/Toast';
+import BankConnect from '@/components/BankConnect';
 
-type Tab = 'dashboard' | 'expenses';
+type Tab = 'dashboard' | 'expenses' | 'bank';
 
 export default function Home() {
   const {
@@ -93,6 +94,19 @@ export default function Home() {
     [deleteExpense, addToast]
   );
 
+  const handleBankImport = useCallback(
+    (importedExpenses: Omit<Expense, 'id' | 'createdAt'>[]) => {
+      let count = 0;
+      for (const data of importedExpenses) {
+        addExpense(data);
+        count++;
+      }
+      addToast(`Imported ${count} transactions as expenses`, 'success');
+      setActiveTab('expenses');
+    },
+    [addExpense, addToast]
+  );
+
   const handleExport = useCallback(() => {
     if (expenses.length === 0) {
       addToast('No expenses to export', 'error');
@@ -154,6 +168,16 @@ export default function Home() {
               >
                 Expenses
               </button>
+              <button
+                onClick={() => setActiveTab('bank')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  activeTab === 'bank'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Bank Import
+              </button>
             </nav>
 
             {/* Actions */}
@@ -202,6 +226,16 @@ export default function Home() {
               }`}
             >
               Expenses
+            </button>
+            <button
+              onClick={() => setActiveTab('bank')}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                activeTab === 'bank'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Bank
             </button>
           </div>
         </div>
@@ -290,6 +324,14 @@ export default function Home() {
                 onEdit={setEditingExpense}
                 onDelete={handleDeleteExpense}
               />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'bank' && (
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white border border-gray-100 rounded-2xl p-6">
+              <BankConnect onImport={handleBankImport} />
             </div>
           </div>
         )}
