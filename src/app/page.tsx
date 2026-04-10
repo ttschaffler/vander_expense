@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Expense, ExpenseFilters } from '@/types/expense';
 import { useExpenses } from '@/hooks/useExpenses';
-import { exportToCSV } from '@/lib/csv';
 import SummaryCards from '@/components/SummaryCards';
 import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseListComponent from '@/components/ExpenseList';
@@ -12,8 +11,9 @@ import ExpenseFiltersComponent from '@/components/ExpenseFilters';
 import { MonthlyChart, CategoryChart } from '@/components/Charts';
 import Modal from '@/components/Modal';
 import ToastContainer, { ToastMessage } from '@/components/Toast';
+import ShareHub from '@/components/ShareHub';
 
-type Tab = 'dashboard' | 'expenses';
+type Tab = 'dashboard' | 'expenses' | 'share';
 
 export default function Home() {
   const {
@@ -93,16 +93,6 @@ export default function Home() {
     [deleteExpense, addToast]
   );
 
-  const handleExport = useCallback(() => {
-    if (expenses.length === 0) {
-      addToast('No expenses to export', 'error');
-      return;
-    }
-    const data = activeTab === 'expenses' ? filteredExpenses : expenses;
-    exportToCSV(data, `expenses-${new Date().toISOString().split('T')[0]}`);
-    addToast(`Exported ${data.length} expenses to CSV`, 'success');
-  }, [expenses, filteredExpenses, activeTab, addToast]);
-
   if (!isLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -154,20 +144,20 @@ export default function Home() {
               >
                 Expenses
               </button>
+              <button
+                onClick={() => setActiveTab('share')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  activeTab === 'share'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Share & Export
+              </button>
             </nav>
 
             {/* Actions */}
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleExport}
-                className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
-                title="Export CSV"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export
-              </button>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-xl hover:bg-indigo-700 active:bg-indigo-800 transition-colors shadow-sm"
@@ -202,6 +192,16 @@ export default function Home() {
               }`}
             >
               Expenses
+            </button>
+            <button
+              onClick={() => setActiveTab('share')}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                activeTab === 'share'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Share
             </button>
           </div>
         </div>
@@ -261,19 +261,6 @@ export default function Home() {
 
         {activeTab === 'expenses' && (
           <div className="space-y-4">
-            {/* Mobile export button */}
-            <div className="sm:hidden flex justify-end">
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-xl transition-colors"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Export CSV
-              </button>
-            </div>
-
             {/* Filters */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6">
               <ExpenseFiltersComponent
@@ -292,6 +279,13 @@ export default function Home() {
               />
             </div>
           </div>
+        )}
+
+        {activeTab === 'share' && (
+          <ShareHub
+            expenses={expenses}
+            onToast={addToast}
+          />
         )}
       </main>
 
