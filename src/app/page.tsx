@@ -4,7 +4,6 @@ import { useState, useMemo, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Expense, ExpenseFilters } from '@/types/expense';
 import { useExpenses } from '@/hooks/useExpenses';
-import { exportToCSV } from '@/lib/csv';
 import SummaryCards from '@/components/SummaryCards';
 import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseListComponent from '@/components/ExpenseList';
@@ -12,6 +11,7 @@ import ExpenseFiltersComponent from '@/components/ExpenseFilters';
 import { MonthlyChart, CategoryChart } from '@/components/Charts';
 import Modal from '@/components/Modal';
 import ToastContainer, { ToastMessage } from '@/components/Toast';
+import ExportDrawer from '@/components/ExportDrawer';
 
 type Tab = 'dashboard' | 'expenses';
 
@@ -32,6 +32,7 @@ export default function Home() {
 
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showExportDrawer, setShowExportDrawer] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [filters, setFilters] = useState<ExpenseFilters>({
@@ -93,15 +94,13 @@ export default function Home() {
     [deleteExpense, addToast]
   );
 
-  const handleExport = useCallback(() => {
+  const handleOpenExport = useCallback(() => {
     if (expenses.length === 0) {
       addToast('No expenses to export', 'error');
       return;
     }
-    const data = activeTab === 'expenses' ? filteredExpenses : expenses;
-    exportToCSV(data, `expenses-${new Date().toISOString().split('T')[0]}`);
-    addToast(`Exported ${data.length} expenses to CSV`, 'success');
-  }, [expenses, filteredExpenses, activeTab, addToast]);
+    setShowExportDrawer(true);
+  }, [expenses.length, addToast]);
 
   if (!isLoaded) {
     return (
@@ -159,7 +158,7 @@ export default function Home() {
             {/* Actions */}
             <div className="flex items-center gap-2">
               <button
-                onClick={handleExport}
+                onClick={handleOpenExport}
                 className="hidden sm:flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
                 title="Export CSV"
               >
@@ -264,7 +263,7 @@ export default function Home() {
             {/* Mobile export button */}
             <div className="sm:hidden flex justify-end">
               <button
-                onClick={handleExport}
+                onClick={handleOpenExport}
                 className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 bg-white border border-gray-200 rounded-xl transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -319,6 +318,14 @@ export default function Home() {
           onCancel={() => setEditingExpense(null)}
         />
       </Modal>
+
+      {/* Export Drawer */}
+      <ExportDrawer
+        isOpen={showExportDrawer}
+        onClose={() => setShowExportDrawer(false)}
+        expenses={expenses}
+        onExportComplete={(msg) => addToast(msg, 'success')}
+      />
 
       {/* Toast Notifications */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
