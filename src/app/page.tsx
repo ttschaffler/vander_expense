@@ -13,8 +13,9 @@ import { MonthlyChart, CategoryChart } from '@/components/Charts';
 import Modal from '@/components/Modal';
 import ToastContainer, { ToastMessage } from '@/components/Toast';
 import BankConnect from '@/components/BankConnect';
+import MonthlyInsights from '@/components/MonthlyInsights';
 
-type Tab = 'dashboard' | 'expenses' | 'bank';
+type Tab = 'dashboard' | 'insights' | 'expenses' | 'bank';
 
 export default function Home() {
   const {
@@ -159,6 +160,16 @@ export default function Home() {
                 Dashboard
               </button>
               <button
+                onClick={() => setActiveTab('insights')}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                  activeTab === 'insights'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Insights
+              </button>
+              <button
                 onClick={() => setActiveTab('expenses')}
                 className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
                   activeTab === 'expenses'
@@ -216,6 +227,16 @@ export default function Home() {
               }`}
             >
               Dashboard
+            </button>
+            <button
+              onClick={() => setActiveTab('insights')}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+                activeTab === 'insights'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Insights
             </button>
             <button
               onClick={() => setActiveTab('expenses')}
@@ -291,6 +312,12 @@ export default function Home() {
               />
             </div>
           </>
+        )}
+
+        {activeTab === 'insights' && (
+          <div className="max-w-3xl mx-auto">
+            <MonthlyInsights expenses={expenses} />
+          </div>
         )}
 
         {activeTab === 'expenses' && (
